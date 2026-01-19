@@ -17,7 +17,7 @@ export default function BottomNav() {
         
         <Link href="/" className={navItemClass("/")}>
           <Home size={24} />
-          <span className="text-[10px]">Home</span>
+          <span className="text-[10px]">Beranda</span>
         </Link>
 
         <Link href="/peta" className={navItemClass("/peta")}>
@@ -38,7 +38,7 @@ export default function BottomNav() {
 
         <Link href="/leaderboard" className={navItemClass("/leaderboard")}>
           <Trophy size={24} />
-          <span className="text-[10px]">Rank</span>
+          <span className="text-[10px]">Peringkat</span>
         </Link>
 
       </div>

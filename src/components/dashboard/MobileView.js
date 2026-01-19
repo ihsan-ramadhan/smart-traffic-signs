@@ -11,9 +11,9 @@ export default function MobileView() {
           <div className="flex justify-between items-center mb-6 relative z-10">
             <div>
               <p className="text-blue-100 text-xs uppercase tracking-wider mb-1">Selamat Pagi,</p>
-              <h1 className="text-2xl font-bold">Mahasiswa Teladan 👋</h1>
+              <h1 className="text-2xl font-bold">Mahasiswa Teladan</h1>
             </div>
-            <div className="w-10 h-10 bg-accent rounded-full border-2 border-white shadow-sm flex items-center justify-center text-yellow-900 font-bold">
+            <div className="w-10 h-10 bg-accent/50 rounded-full flex items-center justify-center border border-accent text-yellow-800 text-xs font-bold">
               MT
             </div>
           </div>
