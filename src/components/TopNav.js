@@ -15,7 +15,6 @@ export default function TopNav() {
     <nav className="hidden md:block sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
       <div className="w-full px-6 md:px-10 h-16 flex justify-between items-center">
         
-        {/* Logo Section */}
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold shadow-blue-200 shadow-md">
             R
@@ -23,7 +22,6 @@ export default function TopNav() {
           <span className="font-bold text-xl text-gray-900 tracking-tight">RambuPintar</span>
         </div>
 
-        {/* Menu Tengah */}
         <div className="flex items-center gap-8">
           <Link href="/" className={navLinkClass("/")}>Beranda</Link>
           <Link href="/peta" className={navLinkClass("/peta")}>Peta</Link>
@@ -31,7 +29,6 @@ export default function TopNav() {
           <Link href="/leaderboard" className={navLinkClass("/leaderboard")}>Peringkat</Link>
         </div>
 
-        {/* Profil Kanan (KONSISTEN DENGAN MOBILE) */}
         <div className="flex items-center gap-4">
           <div className="flex flex-col items-end mr-2">
             <span className="text-xs font-bold text-gray-700">Mahasiswa Teladan</span>

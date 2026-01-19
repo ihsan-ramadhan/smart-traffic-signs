@@ -5,7 +5,6 @@ export default function MobileView() {
   return (
     <div className="w-full max-w-md mx-auto bg-white min-h-screen shadow-2xl overflow-hidden relative pb-24">
         
-        {/* Header Biru Melengkung */}
         <div className="bg-primary text-white p-6 rounded-b-[2.5rem] shadow-lg pb-16 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
           
@@ -38,7 +37,6 @@ export default function MobileView() {
           </div>
         </div>
 
-        {/* Konten Mobile */}
         <div className="px-6 -mt-10 relative z-20 space-y-6">
           
           <div className="bg-white p-5 rounded-2xl shadow-md border border-gray-100">

@@ -25,7 +25,6 @@ export default function BottomNav() {
           <span className="text-[10px]">Peta</span>
         </Link>
 
-        {/* TOMBOL SCAN: Menggunakan bg-primary */}
         <div className="relative -top-5">
           <Link href="/scan-qr" className="bg-primary hover:bg-primary-hover text-white w-16 h-16 rounded-full shadow-xl flex flex-col items-center justify-center border-4 border-white transform active:scale-95 transition">
             <ScanLine size={28} />
