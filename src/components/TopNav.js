@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User } from "lucide-react";
 
 export default function TopNav() {
   const pathname = usePathname();

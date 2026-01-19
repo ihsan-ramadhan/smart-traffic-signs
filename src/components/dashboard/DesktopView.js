@@ -132,7 +132,7 @@ export default function DesktopView() {
 
                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                   <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                     <Trophy size={18} className="text-orange-500" /> Peringkat
+                     <Trophy size={18} className="text-orange-600" /> Peringkat
                   </h3>
                    <div className="space-y-4">
                      <div className="flex items-center justify-between text-sm">
@@ -141,7 +141,7 @@ export default function DesktopView() {
                            <div className="w-6 h-6 bg-blue-100 rounded-full"></div>
                            <span className="font-medium">Dilan</span>
                         </div>
-                        <span className="font-bold text-orange-500">2400</span>
+                        <span className="font-bold text-orange-600">2400</span>
                      </div>
                      <div className="flex items-center justify-between text-sm">
                         <span className="font-bold text-gray-400">2</span>
@@ -149,7 +149,7 @@ export default function DesktopView() {
                            <div className="w-6 h-6 bg-pink-100 rounded-full"></div>
                            <span className="font-medium">Milea</span>
                         </div>
-                        <span className="font-bold text-orange-500">2150</span>
+                        <span className="font-bold text-orange-600">2150</span>
                      </div>
                   </div>
                </div>
