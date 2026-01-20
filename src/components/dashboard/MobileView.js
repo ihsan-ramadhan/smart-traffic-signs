@@ -1,7 +1,26 @@
+"use client";
 import Link from "next/link";
 import { MapPin, Trophy, Star } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function MobileView() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function getUser() {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      setLoading(false);
+    }
+    getUser();
+  }, []);
+
+  const name = user ? user.user_metadata.full_name : "Tamu";
+  const avatar = user ? user.user_metadata.avatar_url : null;
+  const initial = name.charAt(0).toUpperCase();
+
   return (
     <div className="w-full max-w-md mx-auto bg-white min-h-screen shadow-2xl overflow-hidden relative pb-24">
         
@@ -11,10 +30,17 @@ export default function MobileView() {
           <div className="flex justify-between items-center mb-6 relative z-10">
             <div>
               <p className="text-blue-100 text-xs uppercase tracking-wider mb-1">Selamat Pagi,</p>
-              <h1 className="text-2xl font-bold">Mahasiswa Teladan</h1>
+              <h1 className="text-xl font-bold truncate max-w-[200px]">
+                {loading ? "..." : name}
+              </h1>
             </div>
-            <div className="w-10 h-10 bg-accent/50 rounded-full flex items-center justify-center border border-accent text-yellow-800 text-xs font-bold">
-              MT
+            
+            <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden bg-accent flex items-center justify-center">
+              {avatar ? (
+                <img src={avatar} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-yellow-900 font-bold text-sm">{initial}</span>
+              )}
             </div>
           </div>
 
