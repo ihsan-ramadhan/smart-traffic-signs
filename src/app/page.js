@@ -3,7 +3,7 @@ import DesktopView from "@/components/dashboard/DesktopView";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div>
       
       <div className="hidden md:block">
         <DesktopView />

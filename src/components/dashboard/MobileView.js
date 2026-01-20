@@ -23,7 +23,7 @@ export default function MobileView() {
   const initial = name.charAt(0).toUpperCase();
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white min-h-screen shadow-2xl overflow-hidden relative">
+    <div className="w-full max-w-md mx-auto bg-white min-h-[calc(100vh-6rem)] shadow-2xl overflow-hidden relative">
         
         <div className="bg-primary text-white p-6 rounded-b-[2.5rem] shadow-lg pb-16 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
