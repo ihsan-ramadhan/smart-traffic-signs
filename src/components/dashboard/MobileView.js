@@ -1,20 +1,49 @@
 "use client";
 import Link from "next/link";
-import { MapPin, Trophy, Star, ChevronRight, Lock, User, LogOut } from "lucide-react";
+import { MapPin, Trophy, Star, ChevronRight, Lock, User, LogOut, Activity } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function MobileView() {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [scans, setScans] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function getUser() {
+    async function getData() {
       const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+        if (profileData) setProfile(profileData);
+
+        const { data: scanData } = await supabase
+          .from('scans')
+          .select(`
+            id,
+            points_earned,
+            created_at,
+            sign_locations (
+              rambu_type,
+              location_name
+            )
+          `)
+          .eq('user_id', currentUser.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+        
+        if (scanData) setScans(scanData);
+      }
       setLoading(false);
     }
-    getUser();
+    getData();
   }, []);
 
   const handleLogout = async () => {
@@ -29,6 +58,10 @@ export default function MobileView() {
   const name = isLoggedIn ? user.user_metadata.full_name : "Tamu";
   const avatar = isLoggedIn ? user.user_metadata.avatar_url : null;
   const initial = name.charAt(0).toUpperCase();
+
+  const xp = profile?.xp || 0;
+  const levelName = profile?.level_name || "Pemula";
+  const levelNum = profile?.level_number || 1;
 
   return (
     <div className="w-full max-w-md mx-auto bg-white min-h-[calc(100vh-6rem)] shadow-2xl overflow-hidden relative">
@@ -88,16 +121,16 @@ export default function MobileView() {
                 <p className="text-xs text-blue-100">Total Poin</p>
               </div>
               <p className="font-bold text-xl">
-                 {isLoggedIn ? "1,250" : "0"} <span className="text-xs font-normal opacity-80">XP</span>
+                 {isLoggedIn ? xp.toLocaleString() : "0"} <span className="text-xs font-normal opacity-80">XP</span>
               </p>
             </div>
             
             <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl flex-1 border border-white/30 flex flex-col justify-center">
                <div className="flex items-center gap-1 mb-1">
                 <Trophy size={14} className="text-yellow-300" />
-                <p className="text-xs text-blue-100">Level {isLoggedIn ? "5" : "1"}</p>
+                <p className="text-xs text-blue-100">Level {isLoggedIn ? levelNum : "1"}</p>
               </div>
-              <p className="font-bold text-xl">{isLoggedIn ? "Explorer" : "Pemula"}</p>
+              <p className="font-bold text-xl">{isLoggedIn ? levelName : "Pemula"}</p>
             </div>
           </div>
         </div>
@@ -114,7 +147,7 @@ export default function MobileView() {
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 mb-3 leading-relaxed">
-                    Temukan 3 rambu peringatan lagi untuk bonus poin!
+                    Temukan 5 rambu peringatan lagi untuk bonus poin!
                   </p>
                   <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
                     <div className="bg-primary h-full rounded-full w-[40%] shadow-[0_0_10px_rgba(37,99,235,0.5)]"></div>
@@ -161,22 +194,35 @@ export default function MobileView() {
             </div>
             <div className="space-y-3">
                {isLoggedIn ? (
-                  <>
-                    <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition">
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-2xl shadow-inner">⛔</div>
-                      <div>
-                        <h4 className="font-bold text-gray-800 text-sm">Dilarang Masuk</h4>
-                        <p className="text-xs text-gray-400">Jl. Ganesha • 2 jam lalu</p>
+                  scans.length > 0 ? (
+                    scans.map((scan) => (
+                      <div key={scan.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition shadow-sm">
+                        <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-2xl shadow-inner">
+                          {scan.sign_locations?.rambu_type === 'Larangan' ? '⛔' : '⚠️'}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                             <h4 className="font-bold text-gray-800 text-sm capitalize">
+                                {scan.sign_locations?.traffic_sign_id?.replace(/-/g, ' ') || "Rambu Misterius"}
+                             </h4>
+                             <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">+{scan.points_earned} XP</span>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                             <MapPin size={10} />
+                             {scan.sign_locations?.location_name || "Lokasi tidak terdeteksi"}
+                          </p>
+                          <p className="text-[10px] text-gray-400 mt-1">
+                             {new Date(scan.created_at).toLocaleDateString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-xs text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200 flex flex-col items-center gap-2">
+                       <Activity size={24} className="opacity-20" />
+                       <p>Belum ada riwayat scan.</p>
                     </div>
-                    <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition">
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-2xl shadow-inner">🅿️</div>
-                      <div>
-                        <h4 className="font-bold text-gray-800 text-sm">Tempat Parkir</h4>
-                        <p className="text-xs text-gray-400">Jl. Dago • 5 jam lalu</p>
-                      </div>
-                    </div>
-                  </>
+                  )
                ) : (
                   <div className="p-4 text-center text-xs text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                      Belum ada riwayat. Login untuk mulai scan.
