@@ -8,17 +8,29 @@ import { supabase } from "@/lib/supabaseClient";
 export default function TopNav() {
   const pathname = usePathname();
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    async function getUser() {
+    async function getData() {
       const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+        
+        if (profileData) setProfile(profileData);
+      }
       setLoading(false);
     }
-    getUser();
+    getData();
 
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -41,7 +53,10 @@ export default function TopNav() {
   const name = isLoggedIn ? user.user_metadata.full_name : "Tamu";
   const avatar = isLoggedIn ? user.user_metadata.avatar_url : null;
   const initial = name.charAt(0).toUpperCase();
-  const levelText = isLoggedIn ? "Level 5 Explorer" : "Level 1 Pemula";
+
+  const levelName = profile?.level_name || "Pemula";
+  const levelNum = profile?.level_number || 1;
+  const levelText = isLoggedIn ? `Level ${levelNum} ${levelName}` : "Level 1 Pemula";
 
   const navLinkClass = (path) =>
     `text-sm font-medium transition-colors hover:text-primary ${
