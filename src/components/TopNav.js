@@ -157,13 +157,13 @@ export default function TopNav() {
                   <div className="flex gap-3 w-full">
                       <button 
                         onClick={() => setIsLogoutModalOpen(false)}
-                        className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition active:scale-95 text-sm"
+                        className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition active:scale-95 text-sm cursor-pointer"
                       >
                         Batal
                       </button>
                       <button 
                         onClick={confirmLogout}
-                        className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30 transition active:scale-95 text-sm"
+                        className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30 transition active:scale-95 text-sm cursor-pointer"
                       >
                         Ya, Keluar
                       </button>
