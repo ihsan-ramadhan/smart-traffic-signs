@@ -82,7 +82,7 @@ export default function LeaderboardPage() {
                       </div>
                       <div className={`w-9 h-9 rounded-full border flex items-center justify-center overflow-hidden flex-shrink-0 ${isMe ? 'border-primary' : 'border-gray-200'}`}>
                         {u.avatar_url ? (
-                          <img src={u.avatar_url} alt={u.full_name} className="w-full h-full object-cover" />
+                          <img src={u.avatar_url} alt={u.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer"/>
                         ) : (
                           <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-xs">
                             {getInitial(u.full_name)}
