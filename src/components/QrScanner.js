@@ -1,13 +1,18 @@
 "use client";
 import Link from "next/link";
-import { Copy, ScanLine, Smartphone, Camera, XCircle } from "lucide-react";
+import { Copy, ScanLine, Smartphone, Camera, XCircle, CheckCircle, AlertTriangle, Star, Loader2 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { Html5Qrcode } from "html5-qrcode";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function QrScanner() {
   const [isMobile, setIsMobile] = useState(true);
   const [scanState, setScanState] = useState("idle");
   const [cameraError, setCameraError] = useState(false);
+  
+  const [user, setUser] = useState(null);
+  const [resultData, setResultData] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
   
   const html5QrcodeRef = useRef(null);
   const isScanningRef = useRef(false);
@@ -18,6 +23,13 @@ export default function QrScanner() {
     };
     checkScreenSize();
     window.addEventListener("resize", checkScreenSize);
+
+    async function getUser() {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+    }
+    getUser();
+
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
@@ -42,12 +54,7 @@ export default function QrScanner() {
           if (isScanningRef.current) return;
           isScanningRef.current = true;
 
-          try {
-            await qrScanner.stop();
-          } catch (e) {}
-
-          alert(`QR Terdeteksi: ${decodedText}\n\n(Nanti fitur simpan ke database menyusul di commit 3)`);
-          handleReset();
+          await handleScanResult(decodedText);
         },
         () => {}
       )
@@ -58,11 +65,85 @@ export default function QrScanner() {
       });
 
     return () => {
-      qrScanner.stop().catch(() => {});
+      if (qrScanner.isScanning) {
+        qrScanner.stop().catch(() => {});
+      }
     };
   }, [scanState]);
 
+  const handleScanResult = async (qrValue) => {
+    if (!user) {
+      setScanState("needLogin");
+      return;
+    }
+
+    setScanState("loading");
+
+    try {
+      let locationId = qrValue;
+      const urlMatch = qrValue.match(/\/sign\/([^/]+)$/);
+      if (urlMatch) locationId = urlMatch[1];
+
+      const { data: location, error: locError } = await supabase
+        .from("sign_locations")
+        .select("id, location_name, rambu_type, points")
+        .eq("id", locationId)
+        .single();
+
+      if (locError || !location) {
+        setErrorMessage("QR code tidak dikenali. Pastikan kamu scan QR dari Rambu Pintar.");
+        setScanState("error");
+        return;
+      }
+
+      const { data: existingScan } = await supabase
+        .from("scans")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("sign_location_id", location.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (existingScan) {
+        setResultData({
+          location,
+        });
+        setScanState("cooldown");
+        return;
+      }
+
+      const pointsEarned = location.points || 10;
+
+      const { error: scanError } = await supabase.from("scans").insert({
+        user_id: user.id,
+        sign_location_id: location.id,
+        points_earned: pointsEarned,
+      });
+
+      if (scanError) throw scanError;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("xp")
+        .eq("id", user.id)
+        .single();
+
+      const newXp = (profile?.xp || 0) + pointsEarned;
+      await supabase.from("profiles").update({ xp: newXp }).eq("id", user.id);
+
+      setResultData({ location, pointsEarned, totalXp: newXp });
+      setScanState("success");
+      
+    } catch (err) {
+      console.error(err);
+      setErrorMessage("Terjadi kesalahan koneksi saat menyimpan scan. Coba lagi.");
+      setScanState("error");
+    }
+  };
+
   const handleReset = () => {
+    setResultData(null);
+    setErrorMessage("");
     setCameraError(false);
     isScanningRef.current = false;
     setScanState("idle");
@@ -83,6 +164,101 @@ export default function QrScanner() {
             Kembali ke Beranda
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  if (scanState === "success" && resultData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] p-6 bg-gray-50">
+        <div className="w-full max-w-sm bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center animate-in zoom-in-95 duration-300">
+          <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5">
+            <CheckCircle size={44} className="text-green-500" />
+          </div>
+          <span className="px-3 py-1 text-xs font-bold bg-green-50 text-green-700 rounded-full uppercase tracking-wider">
+            Scan Berhasil!
+          </span>
+          <h2 className="text-2xl font-bold text-gray-900 mt-3 mb-1">
+            {resultData.location.rambu_type || "Rambu Terdeteksi"}
+          </h2>
+          <p className="text-gray-500 text-sm mb-6">{resultData.location.location_name}</p>
+
+          <div className="bg-yellow-50 border border-yellow-100 rounded-2xl p-4 mb-6 flex items-center justify-center gap-3">
+            <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center shadow-inner">
+              <Star size={20} className="text-white" fill="white" />
+            </div>
+            <div className="text-left">
+              <p className="text-[10px] text-yellow-700 font-bold uppercase tracking-wider">Poin Didapat</p>
+              <p className="text-2xl font-bold text-yellow-900">+{resultData.pointsEarned} <span className="text-sm font-medium">XP</span></p>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-400 mb-6">
+            Total XP kamu sekarang: <strong className="text-gray-700">{resultData.totalXp?.toLocaleString()} XP</strong>
+          </p>
+
+          <div className="flex justify-between gap-3">
+            <Link href="/" className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition active:scale-95 text-center">
+              Selesai
+            </Link>
+            <button onClick={handleReset} className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-primary text-white hover:bg-primary-hover transition active:scale-95">
+              Scan Lagi
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (scanState === "cooldown" && resultData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] p-6 bg-gray-50">
+        <div className="w-full max-w-sm bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center animate-in zoom-in-95 duration-300">
+          <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-5">
+            <AlertTriangle size={40} className="text-orange-400" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Sudah Pernah Discan!</h2>
+          <p className="text-gray-500 text-sm mb-6">
+            Hebat! Kamu sudah pernah menemukan dan nge-scan <strong className="text-gray-700">{resultData.location.location_name}</strong> sebelumnya.
+          </p>
+          <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-6">
+             <p className="text-xs text-gray-500 leading-relaxed">Poin hanya diberikan <strong className="text-gray-700">1x</strong> untuk setiap rambu yang berhasil kamu temukan.</p>
+          </div>
+          <button onClick={handleReset} className="w-full py-3.5 rounded-xl font-bold text-sm bg-primary text-white hover:bg-primary-hover transition active:scale-95">
+            Cari Rambu Lain
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (scanState === "needLogin") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] p-6 bg-gray-50">
+        <div className="w-full max-w-sm bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center animate-in zoom-in-95 duration-300">
+          <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-5 text-4xl shadow-inner">
+            🔒
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Login Dulu, Yuk!</h2>
+          <p className="text-gray-500 text-sm mb-6">
+            Keren kamu nemu rambunya! Tapi kamu perlu login dulu untuk menyimpan poinnya.
+          </p>
+          <Link href="/login" className="block w-full py-3.5 rounded-xl font-bold text-sm bg-primary text-white hover:bg-primary-hover shadow-lg shadow-blue-500/20 transition active:scale-95 text-center">
+            Masuk Sekarang
+          </Link>
+          <button onClick={handleReset} className="mt-4 text-xs font-bold text-gray-400 hover:text-gray-600 transition">
+             Kembali
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (scanState === "loading") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] gap-4 bg-gray-50">
+        <Loader2 size={40} className="animate-spin text-primary" />
+        <p className="text-gray-500 text-sm font-medium animate-pulse">Menghubungkan ke server...</p>
       </div>
     );
   }
@@ -118,8 +294,12 @@ export default function QrScanner() {
           <div className="bg-red-50 border border-red-100 rounded-3xl mb-6 flex flex-col items-center justify-center gap-4 text-center p-6" style={{ minHeight: 300 }}>
              <XCircle size={48} className="text-red-400" />
              <div>
-                <h3 className="font-bold text-red-900 mb-1">Kamera Gagal Akses</h3>
-                <p className="text-red-700 text-xs">Pastikan kamu sudah memberikan izin akses kamera ke website ini.</p>
+                <h3 className="font-bold text-red-900 mb-1">
+                  {cameraError ? "Kamera Gagal Akses" : "Scan Gagal"}
+                </h3>
+                <p className="text-red-700 text-xs mt-2 leading-relaxed">
+                  {errorMessage || "Pastikan kamu sudah memberikan izin akses kamera ke website ini."}
+                </p>
              </div>
           </div>
         ) : (
@@ -131,21 +311,31 @@ export default function QrScanner() {
           </div>
         )}
 
-        {scanState === "idle" || scanState === "error" ? (
-          <button
-            onClick={() => setScanState("scanning")}
-            className="w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-blue-500/25 transition active:scale-95 flex items-center justify-center gap-2 text-base"
-          >
-            <ScanLine size={22} />
-            {scanState === "error" ? "Coba Lagi" : "Mulai Scan"}
-          </button>
-        ) : (
-          <button
-            onClick={handleReset}
-            className="w-full py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-2xl transition active:scale-95 text-base"
-          >
-            Batal
-          </button>
+        <div className="mb-4">
+          {scanState === "idle" || scanState === "error" ? (
+            <button
+              onClick={() => setScanState("scanning")}
+              className="w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-blue-500/25 transition active:scale-95 flex items-center justify-center gap-2 text-base"
+            >
+              <ScanLine size={22} />
+              {scanState === "error" ? "Coba Lagi" : "Mulai Scan"}
+            </button>
+          ) : (
+            <button
+              onClick={handleReset}
+              className="w-full py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-2xl transition active:scale-95 text-base"
+            >
+              Batal
+            </button>
+          )}
+        </div>
+        
+        {!user && scanState === "idle" && (
+           <div className="mb-4 p-4 bg-amber-50 border border-amber-100 rounded-2xl text-center">
+              <p className="text-amber-700 text-xs font-medium">
+                 ⚠️ Kamu belum login! Poin hasil scan tidak akan tersimpan. <Link href="/login" className="underline font-bold text-amber-900">Masuk sekarang</Link>
+              </p>
+           </div>
         )}
         
       </div>
