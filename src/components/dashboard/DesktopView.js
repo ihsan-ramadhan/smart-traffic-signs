@@ -111,7 +111,7 @@ export default function DesktopView() {
                     <p className="text-gray-400 text-[10px]">Scan untuk buka di HP</p>
                  </div>
                  <div className="bg-white p-1.5 rounded-lg">
-                    <QRCodeSVG value="https://rambupintar.vercel.app" size={60} />
+                    <QRCodeSVG value="https://smart-traffic-signs.vercel.app/" size={60} />
                  </div>
               </div>
             </div>
