@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { BookOpen, Lock, Loader2, Info } from "lucide-react";
+import { BookOpen, Lock, Loader2, Info, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 
 export default function KoleksiPage() {
@@ -20,6 +21,7 @@ export default function KoleksiPage() {
           id,
           location_name,
           traffic_signs (
+            id,
             name,
             category,
             points
@@ -173,45 +175,59 @@ export default function KoleksiPage() {
                        const formatName = ts?.name || "Nama Rambu";
                        const points = ts?.points || 10;
                        
+                       if (isCollected) {
+                         return (
+                           <Link 
+                             key={sign.id} 
+                             href={`/scan/${ts.id}`}
+                             className="relative bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 overflow-hidden group block"
+                           >
+                              <div className="h-32 w-full flex items-center justify-center relative transition-all bg-gray-50 group-hover:bg-blue-50/30">
+                                 <div className="text-5xl drop-shadow-md group-hover:scale-110 transition-transform duration-300">
+                                    {icon}
+                                 </div>
+                                 
+                                 <div className="absolute top-2 right-2 bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full border border-green-200">
+                                   +{points} XP
+                                 </div>
+                                 
+                                 <div className="absolute top-2 left-2 bg-white/80 backdrop-blur-sm p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <ChevronRight size={14} className="text-primary" />
+                                 </div>
+                              </div>
+                              
+                              <div className="p-4 border-t border-gray-100">
+                                 <h3 className="font-bold text-sm truncate mb-0.5 capitalize text-gray-900 group-hover:text-primary transition-colors">
+                                   {formatName}
+                                 </h3>
+                                 <p className="text-xs text-gray-400 truncate flex items-center gap-1">
+                                   {sign.location_name}
+                                 </p>
+                              </div>
+                           </Link>
+                         );
+                       }
+
                        return (
                          <div 
                            key={sign.id} 
-                           className={`relative bg-white rounded-2xl border transition-all duration-300 overflow-hidden group
-                             ${isCollected 
-                                ? 'border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-1' 
-                                : 'border-dashed border-gray-200 opacity-70 grayscale'
-                             }
-                           `}
+                           className="relative bg-white rounded-2xl border border-dashed border-gray-200 opacity-70 grayscale overflow-hidden"
                          >
-                            <div className={`h-32 w-full flex items-center justify-center relative transition-all
-                              ${isCollected ? 'bg-gray-50' : 'bg-gray-200 border-b border-gray-300'}
-                            `}>
-                               {isCollected ? (
-                                  <div className="text-5xl drop-shadow-md group-hover:scale-110 transition-transform duration-300">
+                            <div className="h-32 w-full flex items-center justify-center relative bg-gray-200 border-b border-gray-300">
+                               <div className="relative flex flex-col items-center justify-center text-gray-400 opacity-60">
+                                  <div className="text-4xl filter grayscale contrast-0 brightness-200 drop-shadow-sm mb-1">
                                      {icon}
                                   </div>
-                               ) : (
-                                  <div className="relative flex flex-col items-center justify-center text-gray-400 opacity-60">
-                                     <div className="text-4xl filter grayscale contrast-0 brightness-200 drop-shadow-sm mb-1">
-                                        {icon}
-                                     </div>
-                                     <Lock size={16} className="absolute inset-0 m-auto text-gray-500 bg-gray-200 rounded-full p-0.5" />
-                                  </div>
-                               )}
-                               
-                               {isCollected && (
-                                  <div className="absolute top-2 right-2 bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full border border-green-200">
-                                    +{points} XP
-                                  </div>
-                               )}
+                                  <Lock size={16} className="absolute inset-0 m-auto text-gray-500 bg-gray-200 rounded-full p-0.5" />
+                               </div>
                             </div>
                             
                             <div className="p-4 border-t border-gray-100">
-                               <h3 className={`font-bold text-sm truncate mb-0.5 capitalize ${isCollected ? 'text-gray-900' : 'text-gray-400'}`}>
-                                 {isCollected ? formatName : 'Rambu Belum Ditemukan'}
+                               <h3 className="font-bold text-sm truncate mb-0.5 capitalize text-gray-400">
+                                 Rambu Belum Ditemukan
                                </h3>
                                <p className="text-xs text-gray-400 truncate flex items-center gap-1">
-                                 {isCollected ? sign.location_name : 'Posisi tidak diketahui'}
+                                 Posisi tidak diketahui
                                </p>
                             </div>
                          </div>
