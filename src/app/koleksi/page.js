@@ -2,20 +2,17 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { BookOpen, Lock, Loader2, Info } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function KoleksiPage() {
-  const [user, setUser] = useState(null);
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   
   const [allSigns, setAllSigns] = useState([]);
-  
   const [collectedSignIds, setCollectedSignIds] = useState(new Set());
 
   useEffect(() => {
     async function getData() {
-      const { data: { session } } = await supabase.auth.getSession();
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
 
       const { data: signsData } = await supabase
         .from('sign_locations')
@@ -45,11 +42,11 @@ export default function KoleksiPage() {
         setAllSigns(signsData);
       }
 
-      if (currentUser) {
+      if (user) {
         const { data: userScans } = await supabase
           .from('scans')
           .select('location_id')
-          .eq('user_id', currentUser.id);
+          .eq('user_id', user.id);
 
         if (userScans && userScans.length > 0) {
           const collectedIds = new Set(
@@ -62,8 +59,10 @@ export default function KoleksiPage() {
       setLoading(false);
     }
 
-    getData();
-  }, []);
+    if (!authLoading) {
+      getData();
+    }
+  }, [user, authLoading]);
 
   const groupedSigns = allSigns.reduce((acc, sign) => {
     let type = "Lainnya";
@@ -84,7 +83,7 @@ export default function KoleksiPage() {
   const totalSigns = allSigns.length;
   const progressPercentage = totalSigns === 0 ? 0 : Math.round((totalCollected / totalSigns) * 100);
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] bg-gray-50">
         <Loader2 className="animate-spin text-primary mb-2" size={32} />

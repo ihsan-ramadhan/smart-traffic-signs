@@ -4,13 +4,12 @@ import { Copy, ScanLine, Smartphone, Camera, XCircle, CheckCircle, AlertTriangle
 import { useEffect, useState, useRef } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { supabase } from "@/lib/supabaseClient";
+import { useAuth } from "@/context/AuthContext";
 
 export default function QrScanner() {
+  const { user, refreshProfile } = useAuth();
   const [isMobile, setIsMobile] = useState(true);
   const [scanState, setScanState] = useState("idle");
-  const [cameraError, setCameraError] = useState(false);
-  
-  const [user, setUser] = useState(null);
   const [resultData, setResultData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   
@@ -23,12 +22,6 @@ export default function QrScanner() {
     };
     checkScreenSize();
     window.addEventListener("resize", checkScreenSize);
-
-    async function getUser() {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-    }
-    getUser();
 
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
@@ -138,6 +131,8 @@ export default function QrScanner() {
 
       const newXp = (profile?.xp || 0) + pointsEarned;
       await supabase.from("profiles").update({ xp: newXp }).eq("id", user.id);
+      
+      await refreshProfile();
 
       setResultData({ location, pointsEarned, totalXp: newXp });
       setScanState("success");

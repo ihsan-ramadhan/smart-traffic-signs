@@ -3,28 +3,16 @@ import Link from "next/link";
 import { MapPin, Trophy, Star, ChevronRight, Lock, User, LogOut, Activity, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useAuth } from "@/context/AuthContext";
 
 export default function MobileView() {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const { user, profile, loading } = useAuth();
   const [scans, setScans] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   useEffect(() => {
     async function getData() {
-      const { data: { session } } = await supabase.auth.getSession();
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single();
-        if (profileData) setProfile(profileData);
-
+      if (user) {
         const { data: scanData } = await supabase
           .from('scans')
           .select(`
@@ -36,16 +24,15 @@ export default function MobileView() {
               location_name
             )
           `)
-          .eq('user_id', currentUser.id)
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(5);
         
         if (scanData) setScans(scanData);
       }
-      setLoading(false);
     }
     getData();
-  }, []);
+  }, [user]);
 
   const handleLogoutClick = () => {
     setIsLogoutModalOpen(true);

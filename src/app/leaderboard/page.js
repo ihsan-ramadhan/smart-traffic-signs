@@ -2,17 +2,15 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Trophy, Medal, Crown, Loader2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LeaderboardPage() {
+  const { user: currentUser, loading: authLoading } = useAuth();
   const [leaderboard, setLeaderboard] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function getData() {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user ?? null;
-      setCurrentUser(user);
 
       const { data: topUsers } = await supabase
         .from('profiles')
@@ -23,9 +21,11 @@ export default function LeaderboardPage() {
       if (topUsers) setLeaderboard(topUsers);
       setLoading(false);
     }
-
-    getData();
-  }, []);
+    
+    if (!authLoading) {
+      getData();
+    }
+  }, [authLoading]);
 
   const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : "?");
 
@@ -36,7 +36,7 @@ export default function LeaderboardPage() {
     return <span className="font-bold text-gray-500 w-6 text-center text-sm">{index + 1}</span>;
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] bg-gray-50">
         <Loader2 className="animate-spin text-primary mb-2" size={32} />

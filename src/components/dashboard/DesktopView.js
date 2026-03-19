@@ -4,28 +4,16 @@ import { Trophy, Star, ArrowRight, MapPin, Lock, Activity } from "lucide-react";
 import { QRCodeSVG } from 'qrcode.react'; 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useAuth } from "@/context/AuthContext";
 
 export default function DesktopView() {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const { user, profile, loading } = useAuth();
   const [scans, setScans] = useState([]); 
   const [leaderboard, setLeaderboard] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function getData() {
-      const { data: { session } } = await supabase.auth.getSession();
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single();
-        if (profileData) setProfile(profileData);
-
+      if (user) {
         const { data: scanData } = await supabase
           .from('scans')
           .select(`
@@ -37,7 +25,7 @@ export default function DesktopView() {
               location_name
             )
           `)
-          .eq('user_id', currentUser.id)
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(5);
         
@@ -51,10 +39,9 @@ export default function DesktopView() {
         .limit(5);
       
       if (topUsers) setLeaderboard(topUsers);
-      setLoading(false);
     }
     getData();
-  }, []);
+  }, [user]);
 
   const isLoggedIn = !!user;
   const name = isLoggedIn ? user.user_metadata.full_name : "Tamu";
