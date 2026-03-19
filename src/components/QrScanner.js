@@ -2,11 +2,13 @@
 import Link from "next/link";
 import { Copy, ScanLine, Smartphone, Camera, XCircle, CheckCircle, AlertTriangle, Star, Loader2 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Html5Qrcode } from "html5-qrcode";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/context/AuthContext";
 
 export default function QrScanner() {
+  const router = useRouter();
   const { user, refreshProfile } = useAuth();
   const [isMobile, setIsMobile] = useState(true);
   const [scanState, setScanState] = useState("idle");
@@ -83,6 +85,7 @@ export default function QrScanner() {
           id, 
           location_name, 
           traffic_signs (
+            id,
             name,
             points
           )
@@ -134,9 +137,8 @@ export default function QrScanner() {
       
       await refreshProfile();
 
-      setResultData({ location, pointsEarned, totalXp: newXp });
-      setScanState("success");
-      
+      router.push(`/scan/${ts.id}`);
+
     } catch (err) {
       console.error(err);
       setErrorMessage("Terjadi kesalahan koneksi saat menyimpan scan. Coba lagi.");
@@ -171,47 +173,7 @@ export default function QrScanner() {
     );
   }
 
-  if (scanState === "success" && resultData) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] p-6 bg-gray-50">
-        <div className="w-full max-w-sm bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center animate-in zoom-in-95 duration-300">
-          <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5">
-            <CheckCircle size={44} className="text-green-500" />
-          </div>
-          <span className="px-3 py-1 text-xs font-bold bg-green-50 text-green-700 rounded-full uppercase tracking-wider">
-            Scan Berhasil!
-          </span>
-          <h2 className="text-2xl font-bold text-gray-900 mt-3 mb-1">
-            {(Array.isArray(resultData.location.traffic_signs) ? resultData.location.traffic_signs[0] : resultData.location.traffic_signs)?.name || "Rambu Terdeteksi"}
-          </h2>
-          <p className="text-gray-500 text-sm mb-6">{resultData.location.location_name}</p>
 
-          <div className="bg-yellow-50 border border-yellow-100 rounded-2xl p-4 mb-6 flex items-center justify-center gap-3">
-            <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center shadow-inner">
-              <Star size={20} className="text-white" fill="white" />
-            </div>
-            <div className="text-left">
-              <p className="text-[10px] text-yellow-700 font-bold uppercase tracking-wider">Poin Didapat</p>
-              <p className="text-2xl font-bold text-yellow-900">+{resultData.pointsEarned} <span className="text-sm font-medium">XP</span></p>
-            </div>
-          </div>
-
-          <p className="text-xs text-gray-400 mb-6">
-            Total XP kamu sekarang: <strong className="text-gray-700">{resultData.totalXp?.toLocaleString()} XP</strong>
-          </p>
-
-          <div className="flex justify-between gap-3">
-            <Link href="/" className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition active:scale-95 text-center">
-              Selesai
-            </Link>
-            <button onClick={handleReset} className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-primary text-white hover:bg-primary-hover transition active:scale-95">
-              Scan Lagi
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (scanState === "cooldown" && resultData) {
     return (
@@ -225,7 +187,7 @@ export default function QrScanner() {
             Hebat! Kamu sudah pernah menemukan dan nge-scan <strong className="text-gray-700">{resultData.location.location_name}</strong> sebelumnya.
           </p>
           <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-6">
-             <p className="text-xs text-gray-500 leading-relaxed">Poin hanya diberikan <strong className="text-gray-700">1x</strong> untuk setiap rambu yang berhasil kamu temukan.</p>
+            <p className="text-xs text-gray-500 leading-relaxed">Poin hanya diberikan <strong className="text-gray-700">1x</strong> untuk setiap rambu yang berhasil kamu temukan.</p>
           </div>
           <button onClick={handleReset} className="w-full py-3.5 rounded-xl font-bold text-sm bg-primary text-white hover:bg-primary-hover transition active:scale-95">
             Cari Rambu Lain
@@ -250,7 +212,7 @@ export default function QrScanner() {
             Masuk Sekarang
           </Link>
           <button onClick={handleReset} className="mt-4 text-xs font-bold text-gray-400 hover:text-gray-600 transition">
-             Kembali
+            Kembali
           </button>
         </div>
       </div>
@@ -295,15 +257,15 @@ export default function QrScanner() {
           </div>
         ) : scanState === "error" ? (
           <div className="bg-red-50 border border-red-100 rounded-3xl mb-6 flex flex-col items-center justify-center gap-4 text-center p-6" style={{ minHeight: 300 }}>
-             <XCircle size={48} className="text-red-400" />
-             <div>
-                <h3 className="font-bold text-red-900 mb-1">
-                  {cameraError ? "Kamera Gagal Akses" : "Scan Gagal"}
-                </h3>
-                <p className="text-red-700 text-xs mt-2 leading-relaxed">
-                  {errorMessage || "Pastikan kamu sudah memberikan izin akses kamera ke website ini."}
-                </p>
-             </div>
+            <XCircle size={48} className="text-red-400" />
+            <div>
+              <h3 className="font-bold text-red-900 mb-1">
+                {cameraError ? "Kamera Gagal Akses" : "Scan Gagal"}
+              </h3>
+              <p className="text-red-700 text-xs mt-2 leading-relaxed">
+                {errorMessage || "Pastikan kamu sudah memberikan izin akses kamera ke website ini."}
+              </p>
+            </div>
           </div>
         ) : (
           <div className="bg-gray-900 rounded-3xl overflow-hidden shadow-2xl mb-6 flex flex-col items-center justify-center gap-4" style={{ minHeight: 300 }}>
@@ -334,11 +296,11 @@ export default function QrScanner() {
         </div>
         
         {!user && scanState === "idle" && (
-           <div className="mb-4 p-4 bg-amber-50 border border-amber-100 rounded-2xl text-center">
-              <p className="text-amber-700 text-xs font-medium">
-                 ⚠️ Kamu belum login! Poin hasil scan tidak akan tersimpan. <Link href="/login" className="underline font-bold text-amber-900">Masuk sekarang</Link>
-              </p>
-           </div>
+          <div className="mb-4 p-4 bg-amber-50 border border-amber-100 rounded-2xl text-center">
+            <p className="text-amber-700 text-xs font-medium">
+              ⚠️ Kamu belum login! Poin hasil scan tidak akan tersimpan. <Link href="/login" className="underline font-bold text-amber-900">Masuk sekarang</Link>
+            </p>
+          </div>
         )}
         
       </div>
