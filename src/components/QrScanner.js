@@ -14,6 +14,7 @@ export default function QrScanner() {
   const [scanState, setScanState] = useState("idle");
   const [resultData, setResultData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [cameraError, setCameraError] = useState(false);
   
   const html5QrcodeRef = useRef(null);
   const isScanningRef = useRef(false);
