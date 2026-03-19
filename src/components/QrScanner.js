@@ -86,7 +86,14 @@ export default function QrScanner() {
 
       const { data: location, error: locError } = await supabase
         .from("sign_locations")
-        .select("id, location_name, rambu_type, points")
+        .select(`
+          id, 
+          location_name, 
+          traffic_signs (
+            name,
+            points
+          )
+        `)
         .eq("id", locationId)
         .single();
 
@@ -100,7 +107,7 @@ export default function QrScanner() {
         .from("scans")
         .select("id")
         .eq("user_id", user.id)
-        .eq("sign_location_id", location.id)
+        .eq("location_id", location.id)
         .limit(1)
         .maybeSingle();
 
@@ -112,11 +119,12 @@ export default function QrScanner() {
         return;
       }
 
-      const pointsEarned = location.points || 10;
+      const ts = Array.isArray(location.traffic_signs) ? location.traffic_signs[0] : location.traffic_signs;
+      const pointsEarned = ts?.points || 10;
 
       const { error: scanError } = await supabase.from("scans").insert({
         user_id: user.id,
-        sign_location_id: location.id,
+        location_id: location.id,
         points_earned: pointsEarned,
       });
 
@@ -179,7 +187,7 @@ export default function QrScanner() {
             Scan Berhasil!
           </span>
           <h2 className="text-2xl font-bold text-gray-900 mt-3 mb-1">
-            {resultData.location.rambu_type || "Rambu Terdeteksi"}
+            {(Array.isArray(resultData.location.traffic_signs) ? resultData.location.traffic_signs[0] : resultData.location.traffic_signs)?.name || "Rambu Terdeteksi"}
           </h2>
           <p className="text-gray-500 text-sm mb-6">{resultData.location.location_name}</p>
 

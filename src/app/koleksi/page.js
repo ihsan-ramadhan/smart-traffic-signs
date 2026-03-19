@@ -19,22 +19,43 @@ export default function KoleksiPage() {
 
       const { data: signsData } = await supabase
         .from('sign_locations')
-        .select('id, location_name, rambu_type, points_default')
-        .order('rambu_type', { ascending: true });
+        .select(`
+          id,
+          location_name,
+          traffic_signs (
+            name,
+            category,
+            points
+          )
+        `);
 
-      if (signsData) setAllSigns(signsData);
+      if (signsData) {
+        signsData.sort((a, b) => {
+          const tsA = Array.isArray(a.traffic_signs) ? a.traffic_signs[0] : a.traffic_signs;
+          const tsB = Array.isArray(b.traffic_signs) ? b.traffic_signs[0] : b.traffic_signs;
+          
+          const catA = tsA?.category || "";
+          const catB = tsB?.category || "";
+          if (catA !== catB) return catA.localeCompare(catB);
+          
+          const nameA = tsA?.name || "";
+          const nameB = tsB?.name || "";
+          return nameA.localeCompare(nameB);
+        });
+        setAllSigns(signsData);
+      }
 
       if (currentUser) {
         const { data: userScans } = await supabase
           .from('scans')
-          .select('sign_location_id')
+          .select('location_id')
           .eq('user_id', currentUser.id);
 
-        if (userScans) {
-          const ids = new Set(
-            userScans.map(scan => scan.sign_location_id)
+        if (userScans && userScans.length > 0) {
+          const collectedIds = new Set(
+            userScans.map(scan => scan.location_id).filter(Boolean)
           );
-          setCollectedSignIds(ids);
+          setCollectedSignIds(collectedIds);
         }
       }
 
@@ -45,7 +66,15 @@ export default function KoleksiPage() {
   }, []);
 
   const groupedSigns = allSigns.reduce((acc, sign) => {
-    const type = sign.rambu_type || "Lainnya";
+    let type = "Lainnya";
+    if (sign.traffic_signs) {
+      if (Array.isArray(sign.traffic_signs)) {
+        type = sign.traffic_signs[0]?.category || "Lainnya";
+      } else {
+        type = sign.traffic_signs.category || "Lainnya";
+      }
+    }
+    
     if (!acc[type]) acc[type] = [];
     acc[type].push(sign);
     return acc;
@@ -69,15 +98,14 @@ export default function KoleksiPage() {
       
       <div className="bg-white border-b border-gray-200">
         <div className="w-full px-6 md:px-10 py-8">
-           <div className="flex items-center gap-3 mb-2">
-              <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1 bg-green-50 text-green-700">
-                <BookOpen size={12} className="mb-[1px]" />
-                KOLEKSI
-              </span>
-           </div>
-           
            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
              <div>
+               <div className="flex items-center gap-3 mb-2">
+                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1 bg-green-50 text-green-700">
+                    <BookOpen size={12} className="mb-[1px]" />
+                    KOLEKSI
+                  </span>
+               </div>
                <h1 className="text-3xl font-bold text-gray-900 mb-2">
                  Koleksi Rambu
                </h1>
@@ -142,7 +170,9 @@ export default function KoleksiPage() {
                      {signs.map((sign) => {
                        const isCollected = collectedSignIds.has(sign.id);
                        
-                       const formatName = sign.location_name || "Posisi Rambu";
+                       const ts = Array.isArray(sign.traffic_signs) ? sign.traffic_signs[0] : sign.traffic_signs;
+                       const formatName = ts?.name || "Nama Rambu";
+                       const points = ts?.points || 10;
                        
                        return (
                          <div 
@@ -172,7 +202,7 @@ export default function KoleksiPage() {
                                
                                {isCollected && (
                                   <div className="absolute top-2 right-2 bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full border border-green-200">
-                                    +{sign.points_default || 10} XP
+                                    +{points} XP
                                   </div>
                                )}
                             </div>
@@ -182,7 +212,7 @@ export default function KoleksiPage() {
                                  {isCollected ? formatName : 'Rambu Belum Ditemukan'}
                                </h3>
                                <p className="text-xs text-gray-400 truncate flex items-center gap-1">
-                                 {isCollected ? type : 'Posisi tidak diketahui'}
+                                 {isCollected ? sign.location_name : 'Posisi tidak diketahui'}
                                </p>
                             </div>
                          </div>
