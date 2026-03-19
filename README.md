@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# TRAFFIC CHAMP 🚥🏆
 
-## Getting Started
+**TRAFFIC CHAMP** (Traffic Challenge and Map for People) adalah platform edukasi rambu lalu lintas interaktif berbasis gamifikasi yang dikembangkan untuk program **PKM-PI (Program Kreativitas Mahasiswa - Penerapan Iptek)** di Kota Bandung.
 
-First, run the development server:
+Proyek ini bertujuan untuk meningkatkan kesadaran dan pemahaman masyarakat terhadap rambu lalu lintas melalui pengalaman digital yang menyenangkan, kompetitif, dan informatif.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+**Live Demo**: [https://smart-traffic-signs.vercel.app/](https://smart-traffic-signs.vercel.app/)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ Fitur Utama
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+- **QR Scanner Canggih**: Pindai kode QR yang terpasang pada rambu lalu lintas fisik untuk mendapatkan informasi edukasi secara instan.
+- **Edukasi Sinematik (Lottie)**: Penjelasan makna rambu menggunakan animasi Lottie yang interaktif, ringan, dan modern.
+- **Sistem Gamifikasi**: Dapatkan **XP (Experience Points)** setiap kali menemukan rambu baru dan tingkatkan **Level** profilmu.
+- **Koleksi Digital**: Kumpulkan seluruh jenis rambu lalu lintas (Peringatan, Larangan, Perintah) dalam galeri koleksi pribadimu.
+- **Leaderboard Global**: Bersaing dengan seluruh pengguna lain di Kota Bandung untuk menjadi "Traffic Champion".
+- **Dashboard Dual-View**: Antarmuka desktop yang komprehensif dan antarmuka mobile yang dioptimalkan untuk penggunaan di lapangan.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠️ Tech Stack
 
-## Learn More
+- **Framework**: [Next.js](https://nextjs.org/)
+- **Database & Auth**: [Supabase](https://supabase.com/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Animations**: [LottieFiles](https://lottiefiles.com/)
+- **Deployment**: [Vercel](https://vercel.com/)
 
-To learn more about Next.js, take a look at the following resources:
+## 🚀 Memulai
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Prasyarat
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Node.js terinstall
+- Akun Supabase (untuk Database & Auth)
 
-## Deploy on Vercel
+### Instalasi
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Clone repositori:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```bash
+   git clone https://github.com/ihsan-ramadhan/smart-traffic-signs
+   cd smart-traffic-signs
+   ```
+2. Instal dependensi:
+
+   ```bash
+   npm install
+   ```
+3. Konfigurasi Environment Variables:
+   Buat file `.env.local` dan masukkan kredensial Supabase Anda:
+
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+4. Jalankan server pengembangan:
+
+   ```bash
+   npm run dev
+   ```
+5. Buka [http://localhost:3000](http://localhost:3000) di browser Anda.
