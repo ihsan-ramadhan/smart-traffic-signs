@@ -21,8 +21,11 @@ export default function DesktopView() {
             points_earned,
             created_at,
             sign_locations (
-              rambu_type,
-              location_name
+              location_name,
+              traffic_signs (
+                name,
+                category
+              )
             )
           `)
           .eq('user_id', user.id)
@@ -173,10 +176,14 @@ export default function DesktopView() {
                            <div key={scan.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-50 hover:bg-gray-50 hover:border-gray-200 transition cursor-pointer group">
                                <div className="flex items-center gap-4">
                                  <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition">
-                                    {scan.sign_locations?.rambu_type === 'Larangan' ? '⛔' : '⚠️'}
+                                    {scan.sign_locations?.traffic_signs?.category === 'Larangan' ? '⛔' : 
+                                     scan.sign_locations?.traffic_signs?.category === 'Peringatan' ? '⚠️' : 
+                                     scan.sign_locations?.traffic_signs?.category === 'Perintah' ? '🔵' : '🚥'}
                                  </div>
                                  <div>
-                                   <h4 className="font-bold text-gray-800">{scan.sign_locations?.rambu_type || "Rambu Misterius"}</h4>
+                                   <h4 className="font-bold text-gray-800 capitalize">
+                                     {scan.sign_locations?.traffic_signs?.name || "Rambu Misterius"}
+                                   </h4>
                                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
                                       <MapPin size={12} />
                                       <span>{scan.sign_locations?.location_name || "Lokasi tidak terdeteksi"}</span>

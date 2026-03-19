@@ -20,8 +20,12 @@ export default function MobileView() {
             points_earned,
             created_at,
             sign_locations (
-              rambu_type,
-              location_name
+              location_name,
+              traffic_signs (
+                id,
+                name,
+                category
+              )
             )
           `)
           .eq('user_id', user.id)
@@ -187,12 +191,14 @@ export default function MobileView() {
                     scans.map((scan) => (
                       <div key={scan.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition shadow-sm">
                         <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-2xl shadow-inner">
-                          {scan.sign_locations?.rambu_type === 'Larangan' ? '⛔' : '⚠️'}
+                          {scan.sign_locations?.traffic_signs?.category === 'Larangan' ? '⛔' : 
+                           scan.sign_locations?.traffic_signs?.category === 'Peringatan' ? '⚠️' : 
+                           scan.sign_locations?.traffic_signs?.category === 'Perintah' ? '🔵' : '🚥'}
                         </div>
                         <div className="flex-1">
                           <div className="flex justify-between items-start">
                              <h4 className="font-bold text-gray-800 text-sm capitalize">
-                                {scan.sign_locations?.traffic_sign_id?.replace(/-/g, ' ') || "Rambu Misterius"}
+                                {scan.sign_locations?.traffic_signs?.name || "Rambu Misterius"}
                              </h4>
                              <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">+{scan.points_earned} XP</span>
                           </div>
