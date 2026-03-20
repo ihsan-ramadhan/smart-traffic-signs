@@ -1,50 +1,16 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { Trophy, Star, ArrowRight, MapPin, Lock, Activity } from "lucide-react";
 import { QRCodeSVG } from 'qrcode.react'; 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/context/AuthContext";
+import { useDashboardData } from "@/hooks/useDashboardData";
+import StatCard from "@/components/ui/StatCard";
+import ScanHistoryItem from "@/components/ui/ScanHistoryItem";
 
 export default function DesktopView() {
-  const { user, profile, loading } = useAuth();
-  const [scans, setScans] = useState([]); 
-  const [leaderboard, setLeaderboard] = useState([]);
-
-  useEffect(() => {
-    async function getData() {
-      if (user) {
-        const { data: scanData } = await supabase
-          .from('scans')
-          .select(`
-            id,
-            points_earned,
-            created_at,
-            sign_locations (
-              location_name,
-              traffic_signs (
-                name,
-                category
-              )
-            )
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(5);
-        
-        if (scanData) setScans(scanData);
-      }
-
-      const { data: topUsers } = await supabase
-        .from('profiles')
-        .select('id, full_name, xp, avatar_url')
-        .order('xp', { ascending: false })
-        .limit(5);
-      
-      if (topUsers) setLeaderboard(topUsers);
-    }
-    getData();
-  }, [user]);
+  const { user, profile, loading: authLoading } = useAuth();
+  const { scans, leaderboard, loading: dataLoading } = useDashboardData(user);
 
   const isLoggedIn = !!user;
   const name = isLoggedIn ? user.user_metadata.full_name : "Tamu";
@@ -70,7 +36,7 @@ export default function DesktopView() {
                 </div>
                 
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  Selamat Pagi, {loading ? "..." : name}!
+                  Selamat Pagi, {authLoading ? "..." : name}!
                 </h1>
                 <p className="text-gray-500 max-w-2xl leading-relaxed text-sm">
                   {isLoggedIn 
@@ -79,31 +45,28 @@ export default function DesktopView() {
                 </p>
                 
                 <div className="flex gap-8 mt-6">
-                   <div className="flex items-center gap-3 pr-8 border-r border-gray-100">
-                      <div className="p-2 bg-yellow-50 rounded-lg text-yellow-600">
-                         <Star size={20} fill="currentColor" />
-                      </div>
-                      <div>
-                         <p className="text-[10px] text-gray-400 font-bold uppercase">Total Poin</p>
-                         <p className="text-xl font-bold text-gray-900">
-                            {isLoggedIn ? xp.toLocaleString() : "0"} <span className="text-xs font-normal text-gray-400">XP</span>
-                         </p>
-                      </div>
+                   <div className="pr-8 border-r border-gray-100 min-w-[150px]">
+                      <StatCard 
+                        icon={Star} 
+                        label="Total Poin" 
+                        value={isLoggedIn ? xp.toLocaleString() : "0"} 
+                        unit="XP" 
+                        colorClass="bg-yellow-50/50 border-none"
+                        iconColorClass="text-yellow-600"
+                      />
                    </div>
-                   <div className="flex items-center gap-3">
-                      <div className="p-2 bg-orange-50 rounded-lg text-orange-600">
-                         <Trophy size={20} />
-                      </div>
-                      <div>
-                         <p className="text-[10px] text-gray-400 font-bold uppercase">Peringkat Saya</p>
-                         <p className="text-xl font-bold text-gray-900">
-                            {isLoggedIn 
-                               ? (leaderboard.findIndex(u => u.id === user?.id) !== -1 
-                                    ? `#${leaderboard.findIndex(u => u.id === user?.id) + 1}` 
-                                    : "-") 
-                               : "-"}
-                         </p>
-                      </div>
+                   <div className="min-w-[150px]">
+                      <StatCard 
+                        icon={Trophy} 
+                        label="Peringkat Saya" 
+                        value={isLoggedIn 
+                           ? (leaderboard.findIndex(u => u.id === user?.id) !== -1 
+                                ? `#${leaderboard.findIndex(u => u.id === user?.id) + 1}` 
+                                : "-") 
+                           : "-"} 
+                        colorClass="bg-orange-50/50 border-none"
+                        iconColorClass="text-orange-600"
+                      />
                    </div>
                 </div>
               </div>
@@ -171,31 +134,15 @@ export default function DesktopView() {
 
                   <div className="space-y-2">
                      {isLoggedIn ? (
-                       scans.length > 0 ? (
+                       dataLoading ? (
+                        <div className="space-y-4">
+                          {[1, 2, 3].map(i => (
+                            <div key={i} className="h-20 bg-gray-50 rounded-xl animate-pulse"></div>
+                          ))}
+                        </div>
+                       ) : scans.length > 0 ? (
                          scans.map((scan) => (
-                           <div key={scan.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-50 hover:bg-gray-50 hover:border-gray-200 transition cursor-pointer group">
-                               <div className="flex items-center gap-4">
-                                 <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition">
-                                    {scan.sign_locations?.traffic_signs?.category === 'Larangan' ? '⛔' : 
-                                     scan.sign_locations?.traffic_signs?.category === 'Peringatan' ? '⚠️' : 
-                                     scan.sign_locations?.traffic_signs?.category === 'Perintah' ? '🔵' : '🚥'}
-                                 </div>
-                                 <div>
-                                   <h4 className="font-bold text-gray-800 capitalize">
-                                     {scan.sign_locations?.traffic_signs?.name || "Rambu Misterius"}
-                                   </h4>
-                                   <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-                                      <MapPin size={12} />
-                                      <span>{scan.sign_locations?.location_name || "Lokasi tidak terdeteksi"}</span>
-                                      <span>•</span>
-                                      <span>{new Date(scan.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
-                                   </div>
-                                 </div>
-                               </div>
-                               <div className="text-sm font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100">
-                                 +{scan.points_earned} XP
-                               </div>
-                           </div>
+                           <ScanHistoryItem key={scan.id} scan={scan} />
                          ))
                        ) : (
                          <div className="flex flex-col items-center justify-center h-48 text-center border-2 border-dashed border-gray-100 rounded-xl bg-gray-50">
@@ -233,7 +180,13 @@ export default function DesktopView() {
                   </h3>
                    
                   <div className="space-y-4">
-                     {leaderboard.length > 0 ? (
+                     {dataLoading ? (
+                       <div className="space-y-4">
+                        {[1, 2, 3, 4, 5].map(i => (
+                          <div key={i} className="h-10 bg-gray-50 rounded-lg animate-pulse"></div>
+                        ))}
+                       </div>
+                     ) : leaderboard.length > 0 ? (
                        leaderboard.map((u, index) => (
                          <div key={u.id} className="flex items-center justify-between text-sm">
                             <span className={`font-bold w-4 text-center ${index === 0 ? 'text-yellow-500 text-lg' : index === 1 ? 'text-gray-400 text-lg' : index === 2 ? 'text-orange-700 text-lg' : 'text-gray-400'}`}>
@@ -241,9 +194,9 @@ export default function DesktopView() {
                             </span>
                             
                             <div className="flex items-center gap-2 flex-1 ml-3">
-                               <div className="w-8 h-8 bg-gray-100 rounded-full border border-gray-200 overflow-hidden flex items-center justify-center text-[10px] font-bold text-gray-500">
+                               <div className="w-8 h-8 rounded-full border border-gray-200 overflow-hidden relative flex items-center justify-center text-[10px] font-bold text-gray-500 bg-gray-100">
                                   {u.avatar_url ? (
-                                    <img src={u.avatar_url} alt={u.full_name} className="w-full h-full object-cover" />
+                                    <Image src={u.avatar_url} alt={u.full_name} fill className="object-cover" />
                                   ) : (
                                     getInitial(u.full_name)
                                   )}

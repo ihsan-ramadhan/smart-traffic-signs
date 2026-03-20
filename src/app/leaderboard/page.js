@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Trophy, Medal, Crown, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import Image from "next/image";
 
 export default function LeaderboardPage() {
   const { user: currentUser, loading: authLoading } = useAuth();
@@ -11,7 +12,6 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     async function getData() {
-
       const { data: topUsers } = await supabase
         .from('profiles')
         .select('id, full_name, avatar_url, xp, level_name')
@@ -46,9 +46,9 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="w-full bg-white min-h-screen pb-10">
+    <div className="w-full bg-gray-50 min-h-screen pb-10">
       
-      <div className="border-b border-gray-200">
+      <div className="bg-white border-b border-gray-200">
         <div className="w-full px-6 md:px-10 py-8">
            <div className="flex items-center gap-3 mb-2">
               <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1 bg-orange-50 text-orange-600">
@@ -68,7 +68,7 @@ export default function LeaderboardPage() {
       <div className="w-full px-6 md:px-10 py-8">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           
-          <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100 flex justify-between items-center text-xs font-bold text-gray-400 uppercase tracking-wider">
+          <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100 flex justify-between items-center text-xs font-bold text-gray-400 uppercase tracking-wider font-mono">
             <span>Peringkat</span>
             <span>Skor XP</span>
           </div>
@@ -89,13 +89,13 @@ export default function LeaderboardPage() {
                         {renderRankIcon(index)}
                       </div>
 
-                      <div className={`w-10 h-10 rounded-full border flex items-center justify-center overflow-hidden flex-shrink-0 ${isMe ? 'border-primary' : 'border-gray-200'}`}>
+                      <div className={`w-10 h-10 rounded-full border flex items-center justify-center overflow-hidden relative flex-shrink-0 ${isMe ? 'border-primary' : 'border-gray-200'}`}>
                         {u.avatar_url ? (
-                          <img 
+                          <Image 
                             src={u.avatar_url} 
                             alt={u.full_name} 
-                            className="w-full h-full object-cover" 
-                            referrerPolicy="no-referrer"
+                            fill
+                            className="object-cover" 
                           />
                         ) : (
                           <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-sm">
